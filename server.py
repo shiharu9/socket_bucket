@@ -86,7 +86,7 @@ def remind_command() -> str:
 def run() -> None:
     """Function start a server_side socket, accept client socket requests and sends back a response."""
 
-    SIZE = 2000
+    SIZE = 1024
     PORT = 9100
 
     sock = socket.socket()
@@ -96,6 +96,31 @@ def run() -> None:
         conn, addr = sock.accept()
         print(f'Connect {addr}')
         # server_working = True
+
+        conn.sendall(remind_command().encode('utf-8'))
+        bucket_3 = 0
+        bucket_5 = 0
+
+        while bucket_5 != 4:
+            conn.sendall(f'\nBucket 5l: {bucket_5}l Bucket 3l: {bucket_3}l\n'.encode('utf-8'))
+            command = conn.recv(SIZE).decode('utf-8')
+
+            if command in ('+5', '+3', '-5', '-3'):
+                bucket_5, bucket_3 = filling(command, bucket_3, bucket_5, conn)
+            elif command in ('3+5', "5+3"):
+                bucket_5, bucket_3 = transfer(command, bucket_3, bucket_5, conn)
+            elif command == 'help':
+                conn.sendall(remind_command().encode('utf-8'))
+            elif command == 'exit':
+                conn.sendall('exit'.encode('utf-8'))
+                conn.close()
+                break
+            else:
+                conn.sendall('You entered the wrong command!'.encode('utf-8'))
+        if bucket_5 == 4:
+            conn.sendall('\nCongratulations!'.encode('utf-8'))
+            conn.close()
+            break
 
 
 run()
